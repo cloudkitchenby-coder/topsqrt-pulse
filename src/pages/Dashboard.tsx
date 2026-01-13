@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { MainLayout } from "@/components/layout/MainLayout";
 import { Header } from "@/components/dashboard/Header";
 import { MetricsBar } from "@/components/dashboard/MetricsBar";
 import { BoxGrid } from "@/components/dashboard/BoxGrid";
@@ -11,7 +12,7 @@ import {
   DashboardBoxData 
 } from "@/lib/mockData";
 
-const Index = () => {
+const Dashboard = () => {
   const [selectedLocation, setSelectedLocation] = useState("Lawrence Road");
   const [isMasterView, setIsMasterView] = useState(false);
   const [officerBoxes, setOfficerBoxes] = useState<DashboardBoxData[]>(initialOfficerBoxes);
@@ -25,15 +26,12 @@ const Index = () => {
   };
 
   const handleSave = (boxId: string, result: string) => {
-    // Update counts based on result
     const updateBoxes = (boxes: DashboardBoxData[]) =>
       boxes.map((box) => {
         if (box.id === boxId) {
           if (result === "done") {
-            // Decrement count on completion
             return { ...box, count: Math.max(0, (box.count || 1) - 1) };
           } else if (result === "follow-up" || result === "pending") {
-            // Increment count on follow-up
             return { ...box, count: (box.count || 0) + 1 };
           }
         }
@@ -48,7 +46,7 @@ const Index = () => {
   const userTotal = userBoxes.reduce((sum, box) => sum + (box.count || 0), 0);
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <MainLayout>
       <Header
         selectedLocation={selectedLocation}
         onLocationChange={setSelectedLocation}
@@ -95,8 +93,8 @@ const Index = () => {
         box={selectedBox}
         onSave={handleSave}
       />
-    </div>
+    </MainLayout>
   );
 };
 
-export default Index;
+export default Dashboard;
