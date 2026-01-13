@@ -57,6 +57,37 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        // CRM Custom Colors
+        payment: {
+          DEFAULT: "hsl(var(--payment))",
+          light: "hsl(var(--payment-light))",
+          foreground: "hsl(var(--payment-foreground))",
+        },
+        trial: {
+          DEFAULT: "hsl(var(--trial))",
+          light: "hsl(var(--trial-light))",
+          foreground: "hsl(var(--trial-foreground))",
+        },
+        gst: {
+          DEFAULT: "hsl(var(--gst))",
+          light: "hsl(var(--gst-light))",
+          foreground: "hsl(var(--gst-foreground))",
+        },
+        complaint: {
+          DEFAULT: "hsl(var(--complaint))",
+          light: "hsl(var(--complaint-light))",
+          foreground: "hsl(var(--complaint-foreground))",
+        },
+        unsubscriber: {
+          DEFAULT: "hsl(var(--unsubscriber))",
+          light: "hsl(var(--unsubscriber-light))",
+          foreground: "hsl(var(--unsubscriber-foreground))",
+        },
+        bill: {
+          DEFAULT: "hsl(var(--bill))",
+          light: "hsl(var(--bill-light))",
+          foreground: "hsl(var(--bill-foreground))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -65,20 +96,12 @@ export default {
       },
       keyframes: {
         "accordion-down": {
-          from: {
-            height: "0",
-          },
-          to: {
-            height: "var(--radix-accordion-content-height)",
-          },
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
         },
         "accordion-up": {
-          from: {
-            height: "var(--radix-accordion-content-height)",
-          },
-          to: {
-            height: "0",
-          },
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
         },
       },
       animation: {
