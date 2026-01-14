@@ -1,3 +1,4 @@
+import { forwardRef, useState, useEffect } from "react";
 import { 
   CreditCard, 
   Phone, 
@@ -11,7 +12,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { DashboardBoxData } from "@/lib/mockData";
 import { cn } from "@/lib/utils";
-import { useState, useEffect } from "react";
 
 interface DashboardBoxProps {
   box: DashboardBoxData;
@@ -73,71 +73,76 @@ const getIcon = (category: string, type: string) => {
   }
 };
 
-export const DashboardBox = ({ box, onClick }: DashboardBoxProps) => {
-  const [animating, setAnimating] = useState(false);
-  const [prevCount, setPrevCount] = useState(box.count);
-  const config = categoryConfig[box.category];
-  const Icon = getIcon(box.category, box.type);
+export const DashboardBox = forwardRef<HTMLDivElement, DashboardBoxProps>(
+  ({ box, onClick }, ref) => {
+    const [animating, setAnimating] = useState(false);
+    const [prevCount, setPrevCount] = useState(box.count);
+    const config = categoryConfig[box.category];
+    const Icon = getIcon(box.category, box.type);
 
-  useEffect(() => {
-    if (box.count !== prevCount) {
-      setAnimating(true);
-      const timer = setTimeout(() => setAnimating(false), 300);
-      setPrevCount(box.count);
-      return () => clearTimeout(timer);
-    }
-  }, [box.count, prevCount]);
+    useEffect(() => {
+      if (box.count !== prevCount) {
+        setAnimating(true);
+        const timer = setTimeout(() => setAnimating(false), 300);
+        setPrevCount(box.count);
+        return () => clearTimeout(timer);
+      }
+    }, [box.count, prevCount]);
 
-  return (
-    <div
-      onClick={onClick}
-      className={cn(
-        "relative bg-card rounded-xl p-4 border-2 cursor-pointer transition-all duration-200",
-        "shadow-card hover:shadow-card-hover hover:-translate-y-1",
-        config.borderClass,
-        config.hoverClass
-      )}
-    >
-      <div className="flex items-start justify-between">
-        <div className={cn(
-          "w-12 h-12 rounded-lg flex items-center justify-center",
-          config.bgClass
-        )}>
-          <Icon className={cn("h-6 w-6", config.iconClass)} />
+    return (
+      <div
+        ref={ref}
+        onClick={onClick}
+        className={cn(
+          "relative bg-card rounded-xl p-4 border-2 cursor-pointer transition-all duration-200",
+          "shadow-card hover:shadow-card-hover hover:-translate-y-1",
+          config.borderClass,
+          config.hoverClass
+        )}
+      >
+        <div className="flex items-start justify-between">
+          <div className={cn(
+            "w-12 h-12 rounded-lg flex items-center justify-center",
+            config.bgClass
+          )}>
+            <Icon className={cn("h-6 w-6", config.iconClass)} />
+          </div>
+
+          <div className="text-right">
+            {box.count !== null ? (
+              <div className={cn(
+                "text-3xl font-bold text-foreground",
+                animating && "animate-count"
+              )}>
+                {box.count}
+              </div>
+            ) : box.showTotal ? (
+              <div className="text-sm font-medium text-muted-foreground">Total</div>
+            ) : box.showView ? (
+              <Button variant="ghost" size="sm" className="text-primary hover:text-primary/80">
+                <Eye className="h-4 w-4 mr-1" />
+                View
+              </Button>
+            ) : (
+              <div className="text-2xl text-muted-foreground/50">—</div>
+            )}
+          </div>
         </div>
 
-        <div className="text-right">
-          {box.count !== null ? (
-            <div className={cn(
-              "text-3xl font-bold text-foreground",
-              animating && "animate-count"
-            )}>
-              {box.count}
-            </div>
-          ) : box.showTotal ? (
-            <div className="text-sm font-medium text-muted-foreground">Total</div>
-          ) : box.showView ? (
-            <Button variant="ghost" size="sm" className="text-primary hover:text-primary/80">
-              <Eye className="h-4 w-4 mr-1" />
-              View
-            </Button>
-          ) : (
-            <div className="text-2xl text-muted-foreground/50">—</div>
-          )}
+        <div className="mt-3">
+          <h3 className="font-semibold text-foreground">{box.label}</h3>
+          <p className="text-xs text-muted-foreground capitalize">{box.type}</p>
         </div>
-      </div>
 
-      <div className="mt-3">
-        <h3 className="font-semibold text-foreground">{box.label}</h3>
-        <p className="text-xs text-muted-foreground capitalize">{box.type}</p>
+        {box.count !== null && box.count > 0 && (
+          <div className={cn(
+            "absolute top-2 right-2 w-2 h-2 rounded-full",
+            box.category === 'complaint' ? 'bg-complaint animate-pulse' : 'bg-primary/50'
+          )} />
+        )}
       </div>
+    );
+  }
+);
 
-      {box.count !== null && box.count > 0 && (
-        <div className={cn(
-          "absolute top-2 right-2 w-2 h-2 rounded-full",
-          box.category === 'complaint' ? 'bg-complaint animate-pulse' : 'bg-primary/50'
-        )} />
-      )}
-    </div>
-  );
-};
+DashboardBox.displayName = "DashboardBox";
