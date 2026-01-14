@@ -15,6 +15,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { locations } from "@/lib/mockData";
+import { SystemHealthBadge } from "./SystemHealthBadge";
+import { DemoModeToggle } from "./DemoModeToggle";
+import { ClientJourneyModal } from "./ClientJourneyModal";
 
 interface HeaderProps {
   selectedLocation: string;
@@ -59,10 +62,18 @@ export const Header = ({
                 ))}
               </SelectContent>
             </Select>
+
+            <div className="hidden md:block">
+              <SystemHealthBadge />
+            </div>
           </div>
 
           {/* Actions */}
           <div className="flex items-center gap-3">
+            <DemoModeToggle />
+            
+            <ClientJourneyModal />
+
             <Button
               variant="outline"
               size="sm"

@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { DashboardBoxData } from "@/lib/mockData";
 import { cn } from "@/lib/utils";
+import { SimulateButton } from "./DemoModeToggle";
 
 interface DashboardBoxProps {
   box: DashboardBoxData;
@@ -100,6 +101,9 @@ export const DashboardBox = forwardRef<HTMLDivElement, DashboardBoxProps>(
           config.hoverClass
         )}
       >
+        {/* Simulate button for demo mode */}
+        <SimulateButton boxId={box.id} disabled={(box.count || 0) === 0} />
+
         <div className="flex items-start justify-between">
           <div className={cn(
             "w-12 h-12 rounded-lg flex items-center justify-center",
@@ -111,7 +115,7 @@ export const DashboardBox = forwardRef<HTMLDivElement, DashboardBoxProps>(
           <div className="text-right">
             {box.count !== null ? (
               <div className={cn(
-                "text-3xl font-bold text-foreground",
+                "text-3xl font-bold text-foreground transition-transform",
                 animating && "animate-count"
               )}>
                 {box.count}
