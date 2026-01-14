@@ -19,7 +19,7 @@ import {
 import { Search, ChevronLeft, ChevronRight, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 
 interface Column<T> {
   key: keyof T | string;
@@ -94,13 +94,13 @@ export function DataTable<T extends { id: string }>({
     });
   };
 
-  const handleExport = () => {
+  const handleExport = async () => {
     toast({
       title: "Exporting data...",
       description: "Please wait while we prepare your file.",
     });
 
-    setTimeout(() => {
+    try {
       const exportData = filteredData.map(item => {
         const row: Record<string, unknown> = {};
         columns.forEach(col => {
@@ -110,16 +110,56 @@ export function DataTable<T extends { id: string }>({
         return row;
       });
 
-      const ws = XLSX.utils.json_to_sheet(exportData);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Data");
-      XLSX.writeFile(wb, `${exportFileName}_${new Date().toISOString().split('T')[0]}.xlsx`);
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Data");
+
+      // Add headers
+      const headers = columns.map(col => col.header);
+      worksheet.addRow(headers);
+
+      // Style header row
+      const headerRow = worksheet.getRow(1);
+      headerRow.font = { bold: true };
+      headerRow.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFE0E0E0' }
+      };
+
+      // Add data rows
+      exportData.forEach(row => {
+        const values = columns.map(col => row[col.header] ?? '');
+        worksheet.addRow(values);
+      });
+
+      // Auto-fit columns
+      worksheet.columns.forEach(column => {
+        column.width = 20;
+      });
+
+      // Generate and download file
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${exportFileName}_${new Date().toISOString().split('T')[0]}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
 
       toast({
         title: "Download ready!",
         description: `${exportFileName}.xlsx has been downloaded.`,
       });
-    }, 1000);
+    } catch (error) {
+      toast({
+        title: "Export failed",
+        description: "There was an error exporting the data.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
