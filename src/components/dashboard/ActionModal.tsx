@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { format } from "date-fns";
-import { Calendar as CalendarIcon, X, CheckCircle2 } from "lucide-react";
+import { Calendar as CalendarIcon, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -24,18 +24,21 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
-import { mockClients, remarkTags, resultOptions, DashboardBoxData } from "@/lib/mockData";
+import { mockClients, remarkTags, DashboardBoxData } from "@/lib/mockData";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { getResultOptionsForBox } from "@/lib/autoUpdateEngine";
+import { ClientRecord } from "@/lib/autoUpdateEngine";
 
 interface ActionModalProps {
   isOpen: boolean;
   onClose: () => void;
   box: DashboardBoxData | null;
-  onSave: (boxId: string, result: string) => void;
+  onSave: (boxId: string, result: string, clientId: string, remark: string) => void;
+  clients?: ClientRecord[];
 }
 
-export const ActionModal = ({ isOpen, onClose, box, onSave }: ActionModalProps) => {
+export const ActionModal = ({ isOpen, onClose, box, onSave, clients = [] }: ActionModalProps) => {
   const [date, setDate] = useState<Date>(new Date());
   const [selectedClient, setSelectedClient] = useState<string>("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -43,6 +46,25 @@ export const ActionModal = ({ isOpen, onClose, box, onSave }: ActionModalProps) 
   const [result, setResult] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+
+  // Get result options based on box type
+  const resultOptions = box ? getResultOptionsForBox(box.id) : [];
+
+  // Use provided clients or fall back to mock clients
+  const displayClients = clients.length > 0 ? clients : mockClients.slice(0, 5).map(c => ({
+    id: c.id,
+    name: c.name,
+    unit: c.unit,
+    phone: c.phone,
+    area: c.area,
+    status: 'active' as const,
+    currentBox: box?.id || '',
+    serviceType: 'Standard',
+    startDate: new Date(),
+    pendingAmount: c.amount,
+    lastActionDate: new Date(),
+    attemptCount: 0,
+  }));
 
   const handleTagClick = (tag: string) => {
     setSelectedTags((prev) =>
@@ -60,10 +82,10 @@ export const ActionModal = ({ isOpen, onClose, box, onSave }: ActionModalProps) 
       return;
     }
 
-    if (!remark.trim()) {
+    if (!remark.trim() && selectedTags.length === 0) {
       toast({
         title: "Remark Required",
-        description: "Please add a remark",
+        description: "Please add a remark or select quick tags",
         variant: "destructive",
       });
       return;
@@ -81,15 +103,18 @@ export const ActionModal = ({ isOpen, onClose, box, onSave }: ActionModalProps) 
     setIsLoading(true);
     
     // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 800));
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    
+    const fullRemark = [...selectedTags, remark].filter(Boolean).join('. ');
     
     if (box) {
-      onSave(box.id, result);
+      onSave(box.id, result, selectedClient, fullRemark);
     }
 
+    const selectedResult = resultOptions.find(r => r.value === result);
     toast({
       title: "Action Saved",
-      description: `${box?.label} updated successfully`,
+      description: `${box?.label}: ${selectedResult?.label || result}`,
     });
 
     // Reset form
@@ -151,13 +176,13 @@ export const ActionModal = ({ isOpen, onClose, box, onSave }: ActionModalProps) 
 
           {/* Client Dropdown */}
           <div className="space-y-2">
-            <Label>Client / Unit</Label>
+            <Label>Client / Unit ({displayClients.length} available)</Label>
             <Select value={selectedClient} onValueChange={setSelectedClient}>
               <SelectTrigger>
                 <SelectValue placeholder="Select client" />
               </SelectTrigger>
               <SelectContent>
-                {mockClients.map((client) => (
+                {displayClients.map((client) => (
                   <SelectItem key={client.id} value={client.id}>
                     <div className="flex items-center gap-2">
                       <span className="font-medium">{client.unit}</span>
@@ -191,16 +216,16 @@ export const ActionModal = ({ isOpen, onClose, box, onSave }: ActionModalProps) 
 
           {/* Remark Textarea */}
           <div className="space-y-2">
-            <Label>Remark *</Label>
+            <Label>Additional Remark</Label>
             <Textarea
               value={remark}
               onChange={(e) => setRemark(e.target.value)}
-              placeholder="Enter your remark here..."
-              className="min-h-[100px] resize-none"
+              placeholder="Enter additional remarks here..."
+              className="min-h-[80px] resize-none"
             />
           </div>
 
-          {/* Result Dropdown */}
+          {/* Result Dropdown with descriptions */}
           <div className="space-y-2">
             <Label>Result *</Label>
             <Select value={result} onValueChange={setResult}>
@@ -210,7 +235,10 @@ export const ActionModal = ({ isOpen, onClose, box, onSave }: ActionModalProps) 
               <SelectContent>
                 {resultOptions.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
-                    {option.label}
+                    <div className="flex flex-col">
+                      <span className="font-medium">{option.label}</span>
+                      <span className="text-xs text-muted-foreground">{option.description}</span>
+                    </div>
                   </SelectItem>
                 ))}
               </SelectContent>
